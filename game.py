@@ -238,7 +238,7 @@ class APP:
         pyxel.cls(0)
 
         if self.state == TITLE:
-            pyxel.text(30, 50, "Survival Penguin", 8)
+            pyxel.text(30, 50, "Survival Penguin", 7)
             pyxel.text(30, 70, "PRESS SPACE", 8)
 
         elif self.state == PLAY:

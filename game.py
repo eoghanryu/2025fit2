@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pyxel
 
 TILE = 8
@@ -12,7 +11,14 @@ GAMEOVER = 3
 WALL_TILE  = (0, 0)
 FLOOR_TILE = (1, 0)
 
-# ---------- Field ----------
+
+SND_EAT   = 0
+SND_CLEAR = 1
+SND_OVER  = 2
+SND_BGM   = 3
+MUS_BGM   = 0
+
+
 class Field:
     def __init__(self):
         self.map_id = 0
@@ -35,7 +41,6 @@ class Field:
         pyxel.bltm(0, 0, self.map_id, 0, 0, 128, 128)
 
 
-# ---------- Player ----------
 class Player:
     def __init__(self):
         self.tx = 1
@@ -61,7 +66,6 @@ class Player:
         pyxel.blt(self.tx * TILE, self.ty * TILE, 0, 0, 8, 8, 8, 0)
 
 
-# ---------- Enemy ----------
 class Enemy:
     def __init__(self, tx, ty):
         self.tx = tx
@@ -100,7 +104,6 @@ class Enemy:
         pyxel.blt(self.tx * TILE, self.ty * TILE, 0, 8, 8, 8, 8, 0)
 
 
-# ---------- Fish ----------
 class Fish:
     def __init__(self, field):
         self.tx, self.ty = field.random_floor()
@@ -112,11 +115,46 @@ class Fish:
         pyxel.blt(self.tx * TILE, self.ty * TILE, 0, 0, 16, 8, 8, 0)
 
 
-# ---------- App ----------
 class APP:
     def __init__(self):
         pyxel.init(128, 128, title="Survival Penguin")
         pyxel.load("game.pyxres")
+
+       
+        pyxel.sounds[SND_EAT].set(
+            notes="C3E3G3",
+            tones="TTT",
+            volumes="333",
+            effects="NNN",
+            speed=10
+        )
+
+        pyxel.sounds[SND_CLEAR].set(
+            notes="C4E4G4C4",
+            tones="TTTT",
+            volumes="3333",
+            effects="NNNN",
+            speed=8
+        )
+
+        pyxel.sounds[SND_OVER].set(
+            notes="G3E3C3B2A2A1",
+            tones="TTT",
+            volumes="333",
+            effects="NNN",
+            speed=12
+        )
+
+        pyxel.sounds[SND_BGM].set(
+            notes="C3E3G3E3",
+            tones="TTTT",
+            volumes="2222",
+            effects="NNNN",
+            speed=20
+        )
+
+        
+        pyxel.musics[MUS_BGM].set([SND_BGM])
 
         self.state = TITLE
 
@@ -131,7 +169,6 @@ class APP:
 
         pyxel.run(self.update, self.draw)
 
-    # ----- 初期化系 -----
     def start_game(self):
         self.field.set_random_map()
         self.player.tx, self.player.ty = 1, 1
@@ -147,6 +184,7 @@ class APP:
         self.stage = 1
         self.enemy_speed = 10
 
+        pyxel.playm(MUS_BGM, loop=True)
         self.state = PLAY
 
     def next_stage(self):
@@ -164,7 +202,6 @@ class APP:
         self.fish.respawn(self.field)
         self.state = PLAY
 
-    # ----- update -----
     def update(self):
         if self.state == TITLE:
             if pyxel.btnp(pyxel.KEY_SPACE):
@@ -176,13 +213,17 @@ class APP:
             for enemy in self.enemies:
                 enemy.update(self.field, self.player, self.enemies, self.enemy_speed)
                 if enemy.tx == self.player.tx and enemy.ty == self.player.ty:
+                    pyxel.stop()
+                    pyxel.play(0, SND_OVER)
                     self.state = GAMEOVER
 
             if self.player.tx == self.fish.tx and self.player.ty == self.fish.ty:
                 self.score += 1
+                pyxel.play(1, SND_EAT)
                 self.fish.respawn(self.field)
 
                 if self.score % 10 == 0:
+                    pyxel.play(1, SND_CLEAR)
                     self.state = CLEAR
 
         elif self.state == CLEAR:
@@ -193,7 +234,6 @@ class APP:
             if pyxel.btnp(pyxel.KEY_SPACE):
                 self.state = TITLE
 
-    # ----- draw -----
     def draw(self):
         pyxel.cls(0)
 
